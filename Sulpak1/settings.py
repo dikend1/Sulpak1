@@ -103,7 +103,7 @@ WSGI_APPLICATION = 'Sulpak1.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 ACCESS_KEY_ID = os.getenv("ACCESS_KEY_ID")
-SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KSUEY")
+SECRET_ACCESS_KEY = os.getenv("SECRET_ACCESS_KEY")
 STORAGE_BUCKET_NAME = os.getenv("STORAGE_BUCKET_NAME")
 S3_REGION_NAME = os.getenv("S3_REGION_NAME", "us-east-1")
 S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL")
@@ -162,7 +162,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'Sulpak1'
+AUTH_USER_MODEL = 'One.CustomUser'
 
 # S3_ENDPOINT_URL=S3_ENDPOINT_URL.split("/s3")[0]
 MEDIA_URL = f"{S3_ENDPOINT_URL}/object/public/{STORAGE_BUCKET_NAME}/"

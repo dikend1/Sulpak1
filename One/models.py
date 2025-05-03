@@ -1,17 +1,26 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+class CustomUser(AbstractUser):
+    ROLE_CHOICES = (
+        ('restaurant', 'Restaurant'),
+        ('customer', 'Customer'),
+    )
+    email = models.EmailField(unique=True, null=True, blank=True)
 
-class Restaurant(AbstractUser):
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
-    qr_url = models.URLField(blank=True,null=True,default="")
+    password = models.CharField(max_length=128)
+    username = models.CharField(max_length=150)
+    address = models.TextField(blank=True, null=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+
+    qr_url = models.URLField(blank=True, null=True)
+
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name','password','email']
+    REQUIRED_FIELDS = ['role', 'username']
 
     def __str__(self):
-        return self.email
+        return f"{self.email} - {self.role}"
+
 
 # Тамак ушын мысалы салат Основные блюда
 class Category(models.Model):
@@ -22,7 +31,7 @@ class Category(models.Model):
 
 # Блюда
 class Dish(models.Model):
-    restaurant = models.ForeignKey(Restaurant, related_name='dishes', on_delete=models.CASCADE, null=True, blank=True, default=None)
+    restaurant = models.ForeignKey(CustomUser, related_name='dishes', on_delete=models.CASCADE, null=True, blank=True, default=None)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price = models.FloatField(null=True, blank=True)
@@ -46,19 +55,9 @@ class Review(models.Model):
         return f"Отзыв на {self.dish.name} от {self.user_name}"
 
 
-class Customer(AbstractUser):
-    phone_number = models.CharField(max_length=15)
-    password = models.CharField(max_length=100)
-    username = models.CharField(max_length=100)
-    address = models.TextField(null=True, blank=True, verbose_name="Адрес заказчика")
-    USERNAME_FIELD = 'phone_number'
-    REQUIRED_FIELDS = ['username','password','phone_number']
-
-    def __str__(self):
-        return self.phone_number
 
 class Order(models.Model):
-    customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE, verbose_name="Заказчик")
+    customer = models.ForeignKey(CustomUser, related_name='orders', on_delete=models.CASCADE, verbose_name="Заказчик")
     dishes = models.ManyToManyField(Dish, related_name='orders')
     total_price = models.FloatField()
     created_at = models.DateField(auto_now_add=True)
