@@ -11,7 +11,7 @@ class CustomUser(AbstractUser):
     password = models.CharField(max_length=128)
     username = models.CharField(max_length=150)
     address = models.TextField(blank=True, null=True)
-    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=11, choices=ROLE_CHOICES)
 
     qr_url = models.URLField(blank=True, null=True)
 
