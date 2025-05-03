@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Dish, Category
+from .models import CustomUser, Dish, Category, Order
 
 
 class CustomUserRegistrationSerializer(serializers.ModelSerializer):
@@ -15,7 +15,7 @@ class CustomUserRegistrationSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
-            role=validated_data['role']
+                role=validated_data['role']
         )
         return user
 
@@ -28,3 +28,22 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name']
+
+class CustomerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id','username','email','address','role','qr_url']
+
+class OrderSerializer(serializers.ModelSerializer):
+    dishes = DishSerializer(many=True,read_only=True)
+    customer = CustomerSerializer()
+    class Meta:
+        model = Order
+        fields = ['id','restaurant','customer', 'dishes', 'total_price','created_at','user_number','order_status']
+
+class OrderCreateSerializer(serializers.ModelSerializer):
+    dishes = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all(), many=True)
+
+    class Meta:
+        model = Order
+        fields = ['id', 'restaurant', 'dishes', 'total_price', 'created_at', 'user_number', 'order_status']

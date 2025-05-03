@@ -5,8 +5,8 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from One.models import Category, Dish, CustomUser
-from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer
+from One.models import Category, Dish, CustomUser, Order
+from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderSerializer,OrderCreateSerializer
 
 
 @api_view(['GET'])
@@ -122,3 +122,89 @@ def delete_dish(request,dish_id):
         return Response({"message": f"No dish with id:{dish_id}"}, status=status.HTTP_404_NOT_FOUND)
     dish.delete()
     return Response({"message":f"dish deleted id:{dish_id}"},status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['POST'])
+def add_order(request):
+    data = request.data
+    # Создаем сериализатор с переданными данными
+    serializer = OrderCreateSerializer(data=data)
+
+    if serializer.is_valid():
+        # Сохраняем заказ (создается новый заказ)
+        order = serializer.save(customer=request.user, restaurant=data.get('restaurant'))
+
+        # Добавляем блюда в заказ (Many-to-Many связь)
+        dishes = data.get('dishes', [])
+        for dish_id in dishes:
+            try:
+                dish = Dish.objects.get(id=dish_id)  # Получаем блюдо по id
+                order.dishes.add(dish)  # Добавляем блюдо в заказ
+            except Dish.DoesNotExist:
+                return Response({"detail": f"Dish with id {dish_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Сохраняем заказ
+        order.save()
+
+        # Возвращаем ответ с сериализованными данными заказа
+        return Response(OrderCreateSerializer(order).data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['GET'])
+def get_orders(request):
+    orders = Order.objects.all()
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_orders_id(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id)
+        serializer = OrderSerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Order.DoesNotExist:
+        return Response({
+            "detail": "Order not found"
+        }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+def get_customer_orders(request, customer_id):
+    try:
+        customer = CustomUser.objects.get(id=customer_id)
+        if customer.role != 'customer' or customer.role != 'Customer':
+            return Response({"message": "you are not customer"}, status=status.HTTP_403_FORBIDDEN)
+        orders = Order.objects.filter(customer=customer)
+        if not orders:
+            return Response({"detail": "No orders found for this customer."}, status=status.HTTP_404_NOT_FOUND
+                            )
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    except Exception as e:
+        return Response({
+            "detail": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['GET'])
+def get_restaurant_orders(request, restaurant_id):
+    try:
+        restaurant = CustomUser.objects.get(id=restaurant_id)
+        if restaurant.role != 'restaurant' or restaurant.role != 'Restaurant':
+            return Response({"message": "you are not rest"}, status=status.HTTP_403_FORBIDDEN)
+
+        orders = Order.objects.filter(restaurant=restaurant)
+
+        if not orders:
+            return Response({"detail": "No orders found for this restaurant."}, status=status.HTTP_404_NOT_FOUND
+                            )
+        serializer = OrderSerializer(orders, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        return Response({
+            "detail": str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -57,7 +57,8 @@ class Review(models.Model):
 
 
 class Order(models.Model):
-    customer = models.ForeignKey(CustomUser, related_name='orders', on_delete=models.CASCADE, verbose_name="Заказчик")
+    restaurant = models.ForeignKey(CustomUser,related_name='rest_orders',on_delete=models.CASCADE,default="")
+    customer = models.ForeignKey(CustomUser, related_name='cust_orders', on_delete=models.CASCADE, verbose_name="Заказчик")
     dishes = models.ManyToManyField(Dish, related_name='orders')
     total_price = models.FloatField()
     created_at = models.DateField(auto_now_add=True)
@@ -79,5 +80,7 @@ class DeliveryStatus(models.Model):
 
     def __str__(self):
         return f"Статус доставки для заказа {self.order.id}: {self.status}"
+
+
 
 
