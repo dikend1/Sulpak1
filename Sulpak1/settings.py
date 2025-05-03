@@ -162,7 +162,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-AUTH_USER_MODEL = 'User.CustomUser'
+AUTH_USER_MODEL = 'Sulpak1'
 
 # S3_ENDPOINT_URL=S3_ENDPOINT_URL.split("/s3")[0]
 MEDIA_URL = f"{S3_ENDPOINT_URL}/object/public/{STORAGE_BUCKET_NAME}/"
