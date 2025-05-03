@@ -25,4 +25,4 @@ class Order(models.Model):
     dishes = models.CharField(Dish, related_name='orders', verbose_name='Dish')
     total_price = models.DecimalField(max_digits=10, decimal_places=2,verbose_name='Total_price')
     created_at = models.DateField(auto_now_add=True,verbose_name='Created_at')
-    status = models.CharField(max_length=50,choices=[('pending')])
+    status = models.CharField(max_length=50,choices=[('pending','в ожидание')])
