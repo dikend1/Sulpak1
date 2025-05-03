@@ -45,8 +45,8 @@ class Dish(models.Model):
 
 
 class Review(models.Model):
-    dish = models.ForeignKey(Dish, related_name='reviews', on_delete=models.CASCADE)
-    user_name = models.CharField(max_length=100)
+    restaurant = models.ForeignKey(CustomUser, related_name='reviews', on_delete=models.CASCADE, default="")
+    customer = models.ManyToManyField(CustomUser, related_name='customer_reviews', default="")
     rating = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')])  # Оценка блюда
     review_text = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,13 +1,16 @@
+import uuid
+import requests
 from django.shortcuts import render
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
 from One.models import Category, Dish, CustomUser, Order
 from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderSerializer,OrderCreateSerializer
-
+from Sulpak1 import settings
 
 @api_view(['GET'])
 def get_categories(request):
@@ -37,6 +40,9 @@ def register(request):
 @api_view(['GET'])
 def get_menu(request,restaurant_id):
     restaurant = CustomUser.objects.get(id=restaurant_id)
+    print(restaurant_id)
+    if restaurant.role != 'restaurant':
+        return Response({"message":"id belongs to not the restaurant"}, status=status.HTTP_403_FORBIDDEN)
 
     categories = Category.objects.all()
     data = []
@@ -76,25 +82,61 @@ def get_dish(request,dish_id):
         return Response({"message": f"No dish with id:{dish_id}"}, status=status.HTTP_404_NOT_FOUND)
     serializer = DishSerializer(dish).data
     return Response(serializer, status=status.HTTP_200_OK)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser])
 def add_dish(request, category_id):
     try:
         category = Category.objects.get(id=category_id)
     except Category.DoesNotExist:
-        return Response({"message":f"No category with id:{category_id}"},status=status.HTTP_404_NOT_FOUND)
-    try:
-        restaurant = request.user
-        if restaurant.role != 'restaurant':
-            return Response({"message": "You are not a restaurant"}, status=status.HTTP_403_FORBIDDEN)
-    except CustomUser.DoesNotExist:
-        return Response({"message": f"No restaurant with id:{restaurant.id}"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": f"No category with id:{category_id}"}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = DishSerializer(data=request.data)
+    user = request.user
+    if user.role != 'restaurant':
+        return Response({"message": "You are not a restaurant"}, status=status.HTTP_403_FORBIDDEN)
+
+    image_file = request.FILES.get('image')
+    image_url = ""
+
+    if image_file:
+        extension = image_file.name.split('.')[-1].lower()
+        filename = f"{uuid.uuid4()}.{extension}"
+        path = f"dish_photos/{filename}"
+
+        content_type = {
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'png': 'image/png',
+            'webp': 'image/webp'
+        }.get(extension, 'application/octet-stream')
+
+        SUPABASE_URL = settings.SUPABASE_URL.rstrip('/')
+        bucket = settings.STORAGE_BUCKET_NAME
+        service_key = settings.SERVICE_ROLE_KEY
+
+        upload_url = f"{SUPABASE_URL}/storage/v1/object/{bucket}/{path}"
+        headers = {
+            "Authorization": f"Bearer {service_key}",
+            "Content-Type": content_type,
+            "x-upsert": "true"
+        }
+
+        response = requests.put(upload_url, headers=headers, data=image_file.read())
+
+        if response.status_code == 200:
+            image_url = f"{SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}"
+        else:
+            return Response({"error": f"Image upload failed: {response.status_code}"}, status=500)
+
+    # Вставляем image_url вручную
+    data = request.data.copy()
+    data['image'] = image_url
+
+    serializer = DishSerializer(data=data)
     if serializer.is_valid():
-        dish = serializer.save(restaurant=request.user, category=category)
-        dish.save()
-        return Response(dish.data, status=status.HTTP_201_CREATED)
+        dish = serializer.save(restaurant=user, category=category)
+        return Response(DishSerializer(dish).data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PATCH'])
