@@ -28,21 +28,12 @@ class Dish(models.Model):
     price = models.FloatField(null=True, blank=True)
     category = models.ForeignKey(Category, related_name='dishes', on_delete=models.CASCADE)
     image = models.URLField(blank=True,null=True,default="")
+    is_active = models.BooleanField(default=True)
+    ingredients = models.TextField(blank=True,null=True)
 
     def __str__(self):
         return self.name
 
-
-#Заказы
-class Order(models.Model):
-    user_name = models.CharField(max_length=100)
-    dishes = models.ManyToManyField(Dish, related_name='orders')
-    total_price = models.FloatField()
-    created_at = models.DateField(auto_now_add=True)
-    number = models.CharField(max_length=12)
-
-    def __str__(self):
-        return f"{self.id} от {self.user_name}"
 
 class Review(models.Model):
     dish = models.ForeignKey(Dish, related_name='reviews', on_delete=models.CASCADE)
@@ -53,6 +44,33 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Отзыв на {self.dish.name} от {self.user_name}"
+
+
+class Customer(AbstractUser):
+    phone_number = models.CharField(max_length=15)
+    password = models.CharField(max_length=100)
+    username = models.CharField(max_length=100)
+    address = models.TextField(null=True, blank=True, verbose_name="Адрес заказчика")
+    USERNAME_FIELD = 'phone_number'
+    REQUIRED_FIELDS = ['username','password','phone_number']
+
+    def __str__(self):
+        return self.phone_number
+
+class Order(models.Model):
+    customer = models.ForeignKey(Customer, related_name='orders', on_delete=models.CASCADE, verbose_name="Заказчик")
+    dishes = models.ManyToManyField(Dish, related_name='orders')
+    total_price = models.FloatField()
+    created_at = models.DateField(auto_now_add=True)
+    user_number = models.CharField(max_length=12)
+    order_status = models.CharField(
+        max_length=50,
+        choices=[('Pending', 'В ожидании'), ('Completed', 'Завершен'), ('Cancelled', 'Отменен')],
+        default='Pending'
+    )
+
+    def __str__(self):
+        return f"{self.id} от {self.user_name}"
 
 
 class DeliveryStatus(models.Model):
