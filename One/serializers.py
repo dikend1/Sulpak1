@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser, Dish, Category, Order
+from .models import CustomUser, Dish, Category, Order, Review
 
 
 class CustomUserRegistrationSerializer(serializers.ModelSerializer):
@@ -47,3 +47,9 @@ class OrderCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ['id', 'restaurant', 'dishes', 'total_price', 'created_at', 'user_number', 'order_status']
+
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ['id','restaurant','rating','review_text']
+

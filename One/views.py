@@ -9,7 +9,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
 from One.models import Category, Dish, CustomUser, Order
-from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderSerializer,OrderCreateSerializer
+from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderSerializer, \
+    OrderCreateSerializer, ReviewSerializer
 from Sulpak1 import settings
 
 @api_view(['GET'])
@@ -250,3 +251,13 @@ def get_restaurant_orders(request, restaurant_id):
         return Response({
             "detail": str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def add_review(request):
+    data = request.data
+    serializer = ReviewSerializer(data=data)
+    if serializer.is_valid():
+        serializer.save(customer=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
