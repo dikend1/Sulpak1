@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import CustomUser
+from .models import CustomUser, Dish
 
 
 
@@ -18,3 +18,8 @@ class CustomUserRegistrationSerializer(serializers.ModelSerializer):
             password=validated_data['password']
         )
         return user
+
+class DishSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dish
+        fields = ['id', 'name', 'description', 'price', 'image', 'ingredients']

@@ -4,7 +4,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from One.serializers import CustomUserRegistrationSerializer
+from One.models import Category
+from One.serializers import CustomUserRegistrationSerializer, DishSerializer
 
 
 @api_view(['POST'])
@@ -24,3 +25,17 @@ def register(request):
         }, status=status.HTTP_201_CREATED)
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def get_menu(request):
+    categories = Category.objects.all()
+    data = []
+
+    for category in categories:
+        dishes = category.dishes.filter(is_active=True)
+        serialized_dishes = DishSerializer(dishes, many=True).data
+        data.append({
+            'category': category.name,
+            'dishes': serialized_dishes
+        })
+    return Response(data, status=status.HTTP_200_OK)
