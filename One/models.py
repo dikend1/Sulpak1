@@ -66,7 +66,7 @@ class Order(models.Model):
     user_number = models.CharField(max_length=12)
     order_status = models.CharField(
         max_length=50,
-        choices=[('Pending', 'Готовится'), ('Completed', 'Доставляется'), ('', 'Доставлен')],
+        choices=[('Cooking', 'Готовится'), ('Deliviring', 'Доставляется'), ('Delivered', 'Доставлен')],
         default='Pending'
     )
 

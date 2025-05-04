@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
 from One.models import Category, Dish, CustomUser, Order, Review
-from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderSerializer, \
+from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderCreateSerializer, \
     OrderCreateSerializer, ReviewSerializer, RestaurantSerializer
 from Sulpak1 import settings
 
@@ -166,34 +166,45 @@ def delete_dish(request,dish_id):
     dish.delete()
     return Response({"message":f"dish deleted id:{dish_id}"},status=status.HTTP_204_NO_CONTENT)
 
+
 @api_view(['POST'])
 def add_order(request):
+    """
+    Создание нового заказа с блюдами и деталями.
+    """
+
+    # Получаем данные из запроса
     data = request.data
-    # Создаем сериализатор с переданными данными
+
+    # Создаем сериализатор для валидации данных заказа
     serializer = OrderCreateSerializer(data=data)
+    restaurant = CustomUser.objects.get(id=data.get('restaurant'))
 
     if serializer.is_valid():
-        # Сохраняем заказ (создается новый заказ)
-        order = serializer.save(customer=request.user, restaurant=data.get('restaurant'))
+        # Создаем заказ, устанавливаем заказчика и ресторан
+        order = serializer.save(customer=request.user, restaurant=restaurant)
 
-        # Добавляем блюда в заказ (Many-to-Many связь)
-        dishes = data.get('dishes', [])
-        for dish_id in dishes:
+        # Получаем список id блюд из запроса
+        dishes_ids = data.get('dishes', [])
+
+        # Проверяем и добавляем блюда в заказ
+        for dish_id in dishes_ids:
             try:
                 dish = Dish.objects.get(id=dish_id)  # Получаем блюдо по id
                 order.dishes.add(dish)  # Добавляем блюдо в заказ
             except Dish.DoesNotExist:
-                return Response({"detail": f"Dish with id {dish_id} does not exist."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    "detail": f"Bлюдо с id {dish_id} не существует."
+                }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Сохраняем заказ
+        # Сохраняем заказ с добавленными блюдами
         order.save()
 
-        # Возвращаем ответ с сериализованными данными заказа
+        # Возвращаем успешный ответ с данными нового заказа
         return Response(OrderCreateSerializer(order).data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
+    # Если сериализатор не прошел валидацию, возвращаем ошибку
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 def get_orders(request):
