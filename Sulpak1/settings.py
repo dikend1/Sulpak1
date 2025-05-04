@@ -44,7 +44,7 @@ INSTALLED_APPS = [
 
     "One",
 
-
+    'drf_yasg',
     'rest_framework.authtoken',
     'rest_framework',
     'corsheaders',

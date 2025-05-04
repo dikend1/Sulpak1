@@ -8,9 +8,9 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
-from One.models import Category, Dish, CustomUser, Order
+from One.models import Category, Dish, CustomUser, Order, Review
 from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderSerializer, \
-    OrderCreateSerializer,ReviewSerializer
+    OrderCreateSerializer, ReviewSerializer, RestaurantSerializer
 from Sulpak1 import settings
 
 @api_view(['GET'])
@@ -288,4 +288,32 @@ def add_review(request, restaurant_id):
     else:
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def get_all_restaurants(request):
+    restaurants = CustomUser.objects.filter(role='restaurant')
+    serializer = RestaurantSerializer(restaurants, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_restaurant(request):
+    user = request.user
+
+    if user.role != 'restaurant':
+        return Response({"message": "You are not a restaurant"}, status=status.HTTP_403_FORBIDDEN)
+
+    allowed_fields = ['dop_info', 'username', 'address']
+    data = {field: request.data[field] for field in allowed_fields if field in request.data}
+
+    for key, value in data.items():
+        setattr(user, key, value)
+
+    user.save()
+
+    return Response({
+        "id": user.id,
+        "email": user.email,
+        "username": user.username,
+        "address": user.address,
+        "dop_info": getattr(user, 'dop_info', None),
+    }, status=status.HTTP_200_OK)

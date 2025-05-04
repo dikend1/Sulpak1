@@ -53,3 +53,15 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ['id','rating','review_text','restaurant']
 
+class RestaurantSerializer(serializers.ModelSerializer):
+    average_rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'address', 'role', 'dop_info', 'average_rating']
+
+    def get_average_rating(self, obj):
+        reviews = obj.reviews.all()
+        if reviews.exists():
+            return round(sum([r.rating for r in reviews]) / reviews.count(), 2)
+        return None

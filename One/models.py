@@ -10,8 +10,9 @@ class CustomUser(AbstractUser):
 
     password = models.CharField(max_length=128)
     username = models.CharField(max_length=150)
-    address = models.TextField(blank=True, null=True)
+    address = models.TextField(blank=True, null=True, default='г. Астана, ул. Примерная, 123')
     role = models.CharField(max_length=11, choices=ROLE_CHOICES)
+    dop_info = models.TextField(blank=True, null=True)
 
     qr_url = models.URLField(blank=True, null=True)
 
@@ -46,7 +47,7 @@ class Dish(models.Model):
 
 class Review(models.Model):
     restaurant = models.ForeignKey(CustomUser, related_name='reviews', on_delete=models.CASCADE, default="", null=True,blank=True)
-    customer = models.ManyToManyField(CustomUser, related_name='customer_reviews', default="")
+    customer = models.ManyToManyField(CustomUser, related_name='customer_reviews', default="",blank=True)
     rating = models.IntegerField(choices=[(1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')])  # Оценка блюда
     review_text = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -65,7 +66,7 @@ class Order(models.Model):
     user_number = models.CharField(max_length=12)
     order_status = models.CharField(
         max_length=50,
-        choices=[('Pending', 'В ожидании'), ('Completed', 'Завершен'), ('Cancelled', 'Отменен')],
+        choices=[('Pending', 'Готовится'), ('Completed', 'Доставляется'), ('', 'Доставлен')],
         default='Pending'
     )
 
