@@ -51,5 +51,5 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ['id','restaurant','rating','review_text']
+        fields = ['id','rating','review_text','restaurant']
 

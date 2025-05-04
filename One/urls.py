@@ -15,4 +15,5 @@ urlpatterns = [
     path('orders/customer/<int:customer_id>/',views.get_customer_orders,name = 'get-customer-by-id'),
     path('orders/restaurant/<int:restaurant_id>/',views.get_restaurant_orders,name = 'get-restaurant-by-id'),
     path('orders/add_order/',views.add_order,name = 'add-order'), #FORM-DATA
+    path('restaurant/<int:restaurant_id>/add_review/',views.add_review,name = 'add-review')
 ]
