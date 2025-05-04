@@ -229,7 +229,7 @@ def get_orders_id(request, order_id):
 def get_customer_orders(request, customer_id):
     try:
         customer = CustomUser.objects.get(id=customer_id)
-        if customer.role != 'customer' or customer.role != 'Customer':
+        if customer.role != 'customer':
             return Response({"message": "you are not customer"}, status=status.HTTP_403_FORBIDDEN)
         orders = Order.objects.filter(customer=customer)
         if not orders:
@@ -255,7 +255,7 @@ def get_restaurant_orders(request, restaurant_id):
         if not orders:
             return Response({"detail": "No orders found for this restaurant."}, status=status.HTTP_404_NOT_FOUND
                             )
-        serializer = OrderSerializer(orders, many=True)
+        serializer = OrderCreateSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     except Exception as e:

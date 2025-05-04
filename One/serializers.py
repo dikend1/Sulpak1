@@ -53,14 +53,6 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
         return order
 
-
-class OrderCreateSerializer(serializers.ModelSerializer):
-    dishes = serializers.PrimaryKeyRelatedField(queryset=Dish.objects.all(), many=True)
-
-    class Meta:
-        model = Order
-        fields = ['id', 'restaurant', 'dishes', 'total_price', 'created_at', 'user_number', 'order_status']
-
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -77,4 +69,4 @@ class RestaurantSerializer(serializers.ModelSerializer):
         reviews = obj.reviews.all()
         if reviews.exists():
             return round(sum([r.rating for r in reviews]) / reviews.count(), 2)
-        return None
+        return 1
