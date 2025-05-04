@@ -9,8 +9,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import IsAuthenticated
 
 from One.models import Category, Dish, CustomUser, Order, Review
-from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderCreateSerializer, \
-    OrderCreateSerializer, ReviewSerializer, RestaurantSerializer
+from One.serializers import CustomUserRegistrationSerializer, DishSerializer, CategorySerializer, OrderSerializer,OrderCreateSerializer, ReviewSerializer, RestaurantSerializer
 from Sulpak1 import settings
 
 @api_view(['GET'])

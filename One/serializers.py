@@ -32,7 +32,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id','username','email','address','role','qr_url']
+        fields = ['id','username','email','address','role']
 
 class OrderCreateSerializer(serializers.ModelSerializer):
     dishes = serializers.ListField(child=serializers.IntegerField())  # Список ID блюд
@@ -52,6 +52,13 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             order.dishes.add(dish)
 
         return order
+
+class OrderSerializer(serializers.ModelSerializer):
+    dishes = DishSerializer(many=True,read_only=True)
+    customer = CustomerSerializer()
+    class Meta:
+        model = Order
+        fields = ['id','restaurant','customer', 'dishes', 'total_price','created_at','user_number','order_status']
 
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
